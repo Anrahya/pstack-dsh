@@ -3,7 +3,6 @@ import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { RoleEffortMap } from '../src/request-overlay.ts'
 import { createSkillProvider } from '../src/skills-provider.ts'
 import { spawnTool } from '../src/tools.ts'
 
@@ -82,9 +81,7 @@ describe('skill call sites', () => {
   })
 
   it('exposes pstack_spawn without model or effort fields', () => {
-    const tool = spawnTool({
-      roles: new RoleEffortMap(),
-    })
+    const tool = spawnTool({})
     const keys = Object.keys(tool.parameters)
     assert.deepEqual(keys.sort(), ['description', 'prompt', 'role', 'route_index', 'run_in_background'])
     assert.ok(!('model' in tool.parameters))

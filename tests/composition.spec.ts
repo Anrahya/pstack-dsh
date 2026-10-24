@@ -1,59 +1,59 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { access, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
+async function exists(path: string): Promise<boolean> {
+  try {
+    await access(path)
+    return true
+  } catch {
+    return false
+  }
+}
+
 describe('bundle composition', () => {
-  it('is installable with stock dsh plugin add from git', async () => {
+  it('is a server-only bundle installable with dsh plugin add from git', async () => {
     const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')) as {
       name: string
       main: string
       scripts: Record<string, string>
-      dsh: { bundle?: { patch?: string }; client: { platform: string; inject: string[] } }
+      dsh: { bundle?: { patch?: string }; client?: unknown }
     }
     assert.equal(pkg.name, 'pstack-dsh')
     assert.equal(pkg.dsh.bundle?.patch, './cordis.patch.yml')
+    assert.equal(pkg.dsh.client, undefined)
     assert.equal(pkg.scripts.prepare, undefined)
     assert.equal(pkg.main, 'lib/index.js')
-    const [host, client, readme, patch] = await Promise.all([
+    const [host, patch] = await Promise.all([
       readFile(join(root, 'lib/index.js'), 'utf8'),
-      readFile(join(root, 'lib/client.js'), 'utf8'),
-      readFile(join(root, 'README.md'), 'utf8'),
       readFile(join(root, 'cordis.patch.yml'), 'utf8'),
     ])
     assert.match(host, /function apply\(/)
     assert.match(host, /export \{[^}]*\bapply\b/)
-    assert.match(client, /window\.__ModuleLoader__\.load/)
     assert.match(patch, /id:\s*pstack-dsh/)
     assert.match(patch, /name:\s*pstack-dsh/)
-    assert.match(readme, /设置 → 插件 → 添加插件/)
-    assert.match(readme, /github:aa2246740\/pstack-dsh#v0\.2\.1/)
-    assert.match(readme, /dsh plugin --profile web add github:aa2246740\/pstack-dsh#v0\.2\.1/)
-    assert.doesNotMatch(readme, /\bdshx\b|\bmy-plugins\b/i)
   })
 
-  it('declares a web client half on settings.section, not a second config file', async () => {
+  it('ships no browser client and no settings route', async () => {
     const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')) as {
-      name: string
       exports: Record<string, unknown>
-      dsh: { client: { platform: string; inject: string[] } }
     }
-    assert.equal(pkg.name, 'pstack-dsh')
-    assert.equal(pkg.exports['./client'], './lib/client.js')
-    assert.equal(pkg.dsh.client.platform, 'web')
-    assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-settings'))
-    assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-locale'))
+    assert.equal(pkg.exports['./client'], undefined)
+    assert.equal(await exists(join(root, 'src/client')), false)
+    assert.equal(await exists(join(root, 'src/settings-routes.ts')), false)
+    assert.equal(await exists(join(root, 'lib/client.js')), false)
   })
 
-  it('registers settings.section id pstack from the client entry', async () => {
-    const source = await readFile(join(root, 'src/client/index.tsx'), 'utf8')
-    assert.match(source, /export function apply/)
-    assert.match(source, /export const inject = \['slots', 'locale', 'remote'\]/)
-    assert.doesNotMatch(source, /export\s+default\s+/)
-    assert.match(source, /settings\.section/)
-    assert.match(source, /SETTINGS_SECTION_ID/)
+  it('keeps the tool and skill registrations on the host half', async () => {
+    const source = await readFile(join(root, 'src/index.ts'), 'utf8')
+    assert.match(source, /ctx\.skills\.registerProvider/)
+    for (const tool of ['catalogTool', 'overlayReadTool', 'overlayWriteTool', 'spawnTool']) {
+      assert.match(source, new RegExp(`${tool}\\(host\\)`))
+    }
+    assert.doesNotMatch(source, /settings-routes|webServer|agent\/request/)
   })
 })

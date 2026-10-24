@@ -1,168 +1,96 @@
-# official pstack 的 DeepSeek Harness 移植
+# pstack-dsh
 
-## 安装 / Install
+DeepSeek Harness port of [official pstack](https://github.com/cursor/plugins/tree/main/pstack). The playbooks and principles are Lauren Tan's. The harness call layer is rewritten for DSH. This fork is server-only: no Settings page, no browser bundle.
 
-### 官方 DeepSeek Harness 桌面 App（推荐） / Desktop app (recommended)
+- Targets **DSH 0.2.1-rc.3** (`@deepseek-ai/dsh-*` peers `>=0.2.1-rc.1 <0.3.0`).
+- Skills synced to **pstack 0.15.32**: 57 skills, 23 playbooks, 24 principles. `make-bot-ui` is intentionally absent because it is Cursor/Grok-only.
+- Every role inherits the main session's provider, model, and reasoning effort. Only the review roles are meant to be pinned, and only if you choose to.
 
-打开 **设置 → 插件 → 添加插件**，在“包名或地址”中输入：
+## Install
 
-Open **Settings → Plugins → Add plugin** and enter this in “Package name or address”:
+Desktop app: **Settings → Plugins → Add plugin**, then enter:
 
 ```text
-github:aa2246740/pstack-dsh#v0.2.3
+github:Anrahya/pstack-dsh#v0.3.0
 ```
 
-桌面端插件管理器负责 Desktop profile 和内置包管理器。本发布已包含编译好的 `lib/`；普通使用不需要 clone 或本地构建。若应用提示刷新或重新打开，请按提示完成。
-
-The desktop plugin manager owns the Desktop profile and bundled package manager. This release includes built `lib/`; normal use needs no clone or local build. Follow the app if it asks you to reload or reopen after installation.
-
-### Web CLI
+Web profile:
 
 ```sh
-dsh plugin --profile web add github:aa2246740/pstack-dsh#v0.2.3
+dsh plugin --profile web add github:Anrahya/pstack-dsh#v0.3.0
 ```
 
-这条官方 CLI 命令只写入 `web` profile，不能修改 Desktop App 的 profile。对于已运行的 Web Host，请重新打开该 Host 一次，再刷新网页。
+Restart the app or the Web Host once after installing. The package ships `lib/`, so no build step is needed.
 
-This official CLI command writes only the `web` profile; it cannot modify the Desktop App profile. For an already-running Web Host, reopen that Host once and reload the page.
+## Configure review
 
-面向官方 DeepSeek Harness **0.2.0-rc.2**（tag `dsh-v0.2.0-rc.2`，npm `@deepseek-ai/dsh@0.2.0-rc.2`）。Node `^22.19.0` 或 `>=24`。`@deepseek-ai/dsh-*` peer 范围是 `>=0.2.0-rc.1 <0.2.1`，接受 `0.2.0-rc.2`，拒绝 `0.1.7` alpha。
+There is no GUI. A fresh install needs no configuration: every role inherits this conversation. To pin review, run `/setup-pstack` in a session, or write `$DSH_HOME/pstack-dsh.json` (normally `~/.dsh/pstack-dsh.json`):
 
-Targets official DeepSeek Harness **0.2.0-rc.2** (tag `dsh-v0.2.0-rc.2`, npm `@deepseek-ai/dsh@0.2.0-rc.2`). Node `^22.19.0` or `>=24`. The `@deepseek-ai/dsh-*` peer range is `>=0.2.0-rc.1 <0.2.1`: it accepts `0.2.0-rc.2` and rejects `0.1.7` alphas.
-
-**English title.** pstack-dsh, a DeepSeek Harness port of official pstack.
-
-**中文.** 这是 official pstack 的 DeepSeek Harness 移植。玩法和原则来自 poteto 的 official pstack；只有调用层换成 DSH。
-
-**English.** This is a DeepSeek Harness port of official pstack. Playbooks and principles are poteto's. Only the harness call layer is swapped.
-
-## 来源 / Credits
-
-23 个玩法（playbooks）和 23 条原则（principles）是 [poteto](https://x.com/poteto) 写的，出自 [official pstack](https://github.com/cursor/plugins/tree/main/pstack)。本仓库是 DeepSeek Harness 移植（[aa2246740/pstack-dsh](https://github.com/aa2246740/pstack-dsh)）。调用层用 [HARNESS.md](./HARNESS.md) 里的 DSH 工具名。玩法和原则不是本仓库写的。
-
-The 23 playbooks and 23 principles are [poteto](https://x.com/poteto)'s, from [official pstack](https://github.com/cursor/plugins/tree/main/pstack). This repository is the DeepSeek Harness port ([aa2246740/pstack-dsh](https://github.com/aa2246740/pstack-dsh)). Harness calls use DSH tools named in [HARNESS.md](./HARNESS.md). This port did not author those playbooks or principles.
-
-## 本地目录 / Local checkout
-
-已经 clone 到本机时（开发/本地测试）：
-
-A local checkout (development/local testing):
-
-```sh
-git clone https://github.com/aa2246740/pstack-dsh.git
-dsh plugin --profile web add ./pstack-dsh
+```json
+{
+  "version": 1,
+  "roles": {
+    "independent-verifier": {
+      "inherit": false,
+      "routes": [{ "provider": "opencode-go", "model": "glm-5.3-flash", "reasoningEffort": "high" }]
+    },
+    "interrogate-reviewers": {
+      "inherit": false,
+      "routes": [{ "provider": "opencode-go", "model": "glm-5.3-flash", "reasoningEffort": "high" }]
+    }
+  }
+}
 ```
 
-然后同样重启 Host，再刷新页面。
+- `independent-verifier` is the single fresh check on a finished change.
+- `interrogate-reviewers` is the adversarial panel. One route is one reviewer; add routes for more reviewers.
+- Omit `reasoningEffort` when the route does not list it. `glm-5.3-flash` accepts `low`, `high`, and `max`.
+- Any role not listed inherits the parent. An empty or missing file inherits everywhere.
 
-Then restart that Host and reload the page.
+Validate and write the overlay with the `pstack_overlay_write` tool. `pstack_catalog` lists the live routes in this install; never write a pair that is not there.
 
-```sh
-dsh plugin --profile web remove pstack-dsh
-```
+## Skills
 
-Desktop App 请使用上面的应用内“添加插件”入口。官方 CLI 只管理 `web` profile。
+Use `/poteto-mode` at the start of a task. It picks a playbook and runs the other skills as steps need them. Other entry points include `/how`, `/why`, `/sharpen`, `/interrogate`, `/swarm`, `/arena`, `/architect`, `/tdd`, `/unslop`, `/no-comments`, `/benchmark-checklist`, and `/statechart`.
 
-Use the in-app “Add plugin” entry above for the Desktop App. The public CLI manages the `web` profile only.
+Most skills are user-invocable and not model-invocable, matching upstream. The principles and the common workflow skills are model-invocable so the mode can load them.
 
-## 开始用 / Get started
+## Tools this plugin adds
 
-两步。
-
-Two steps.
-
-1. 要做事、要严谨，直接用 [`/poteto-mode`](./skills/poteto-mode/SKILL.md)。不用先跑 setup。子 agent 默认继承当前对话的路由。
-2. 只有想给某个角色换已登录的路由时，打开 **设置 → pstack**（导航「pstack 角色」/「pstack roles」）。页面写入 `$DSH_HOME/pstack-dsh.json`。[`/setup-pstack`](./skills/setup-pstack/SKILL.md) 只是指向那一页的指针。
-
-1. Use [`/poteto-mode`](./skills/poteto-mode/SKILL.md) for work that needs rigor. No setup required. Children inherit this conversation's route.
-2. To pin a logged-in route per role, open **Settings → pstack** (nav label **pstack 角色** / **pstack roles**). The page writes `$DSH_HOME/pstack-dsh.json`. [`/setup-pstack`](./skills/setup-pstack/SKILL.md) is an optional pointer to that page.
-
-角色模型列表会随 DSH 的登录、退出登录和模型目录变更通知更新，也可点击「刷新模型列表」。刷新只更新候选项，不覆盖尚未保存的角色和 effort；当前选择若失去登录会标为「暂不可用」。新加入 dsh-oauth-login 的 `pi-*` 路由以及 dsh-antigravity-oauth 的 `agy-*` 路由只要已登录且已注册，就会自动纳入，无需在 pstack 里再维护一份提供商名单。
-
-Model choices follow DSH login/logout and catalog notifications. **Refresh models** also updates the choices without replacing unsaved role/effort edits. A selected route that becomes unavailable stays visibly marked. Newly registered, signed-in `pi-*` and `agy-*` routes are discovered without a second provider allowlist.
-
-第一次用可以看 [pstack 指南](./docs/guide/README.md)。
-
-New here? The [pstack guide](./docs/guide/README.md) walks through a first real task.
-
-其余技能是按需的。`/poteto-mode` 会在步骤需要时自己去调。
-
-The other skills are situational. The mode skill uses them when a step needs them.
-
-## 上游 0.15 同步
-
-技能内容同步至 `cursor/plugins` 的 pstack 0.15.0，提交 `71ed0d1076fec562c1b74ee353121a8d00f75382`。保留 DSH 工具和角色路由。
-
-设置页的「Poteto 0.15 推荐」仅供参考，不会替换用户已保存的模型或 effort。`how-critics` 不再显示或启动代理，旧配置仍可读写并保留。不包含 Cursor 专用的 make-bot-ui。
-
-The Poteto 0.15 recommendations are display-only. Existing model and effort assignments remain unchanged. The retired `how-critics` setting stays readable for compatibility but is hidden and never starts an agent. Cursor-only make-bot-ui is not included.
-
-## 默认模型与 effort / Defaults
-
-装完就能用，不必先打开设置，也不必跑 `/setup-pstack`。
-
-A fresh install is usable without Settings → pstack and without `/setup-pstack`.
-
-**模型 / Model.** 不要发送 `model`，除非 live catalog 里已经有这一条。没有 overlay 就继承父对话。不要编造 Cursor 面板 slug（`grok-4.6-fast-xhigh`、`gpt-5.6-sol-max`、`claude-fable-5-thinking-max`、`claude-opus-5-thinking-xhigh`）。
-
-Do not send `model` unless that pair was detected live. Missing overlay inherits the parent. Do not invent Cursor panel slugs.
-
-**effort.** 只提供该路由 `resolveModelInfo().reasoning.efforts` 列出的 id。没有 effort 字段就省略。skill 从不在 spawn 上发送 `reasoning_effort` 或 `thinking`。官方 `subagent` schema 没有这些字段。角色 effort 写在 overlay 里，由 `agent/request` 落到 `LlmCallConfig.reasoningEffort`。
-
-Effort is only the ids that route actually accepts. If the route has none, omit it. Skills never send `reasoning_effort` or `thinking` on spawn. Official `subagent` has no such field. Role effort lives in the overlay and is applied on `agent/request`.
-
-**设置 / Settings.** 配置页是官方 Settings 里的 `settings.section`（id `pstack`，order 16）。只列出已登录路由；effort 只列出该路由 live `resolveModelInfo().reasoning.efforts`。空列表就是继承父对话。保存写同一份 overlay，不是第二份配置。
-
-The editor is the official Settings `settings.section` (id `pstack`, order 16). It lists logged-in routes only. Effort options are that route's live `resolveModelInfo().reasoning.efforts`. An empty list means inherit the parent. Save writes the same overlay, not a second file.
-
-设置页只列出已经登录的 API key 路由，以及 dsh-oauth-login / dsh-antigravity-oauth 里已经签过名、并且适配器已注册的路由。空目录就是继承父对话。
-
-## 推荐依赖 / Recommended peer
-
-订阅与服务登录（ChatGPT / Claude / Grok / Copilot / OpenRouter / Kimi / Google Antigravity）要出现在 **设置 → pstack** 列表里，可按需安装 [dsh-oauth-login](https://github.com/aa2246740/dsh-oauth-login) 或 dsh-antigravity-oauth。不是硬依赖。只用 API key 的用户可以不装。本插件不读写 `~/.pi`、`~/.codex`、`~/.claude`、grok CLI 登录文件。
-
-Subscription logins show up on **Settings → pstack** after you install [dsh-oauth-login](https://github.com/aa2246740/dsh-oauth-login) or dsh-antigravity-oauth. They are not required. API-key-only users work without them. This plugin does not read or write official CLI auth files.
-
-```sh
-dsh plugin --profile web add github:aa2246740/dsh-oauth-login#v0.2.7
-```
-
-## 这不是 Cursor 插件 / Not the Cursor plugin
-
-这里的角色映射在 **设置 → pstack**。官方 Cursor `/setup-pstack` 会写 `~/.cursor/rules`，并用 Cursor 的模型名。不要在 DSH 上跑那份。
-
-Role mapping in this repo is **Settings → pstack**. Official Cursor `/setup-pstack` writes `~/.cursor/rules` and uses Cursor slugs. Do not run it here.
-
-## 工具 / Tools
-
-本插件注册：
-
-This plugin registers:
-
-| 工具 / Tool | 作用 / Role |
+| Tool | Purpose |
 |---|---|
-| `pstack_spawn` | 按角色起 DSH 子 agent。不要传 model / effort。 |
-| `pstack_catalog` | 只列出已登录的 live 路由。 |
-| `pstack_overlay_read` / `pstack_overlay_write` | 读写 `$DSH_HOME/pstack-dsh.json`。 |
-| Settings → pstack | 官方设置页。保存同一份 overlay。 |
+| `pstack_spawn` | Start a child for a pstack role. Fields: `description`, `prompt`, `role`, `run_in_background`, `route_index`. No model or effort fields; the overlay supplies them. |
+| `pstack_catalog` | List live provider/model routes and their effort ids. |
+| `pstack_overlay_read` | Read `$DSH_HOME/pstack-dsh.json`. |
+| `pstack_overlay_write` | Validate and write the overlay. |
 
-技能入口：`/poteto-mode`，以及 bundled 的 playbook / principle skills。[`/setup-pstack`](./skills/setup-pstack/SKILL.md) 指向设置页。
+`pstack_spawn` uses `ctx.subagents.startActivation`: background children use `delivery: 'parent'`, foreground children use `delivery: 'caller'`. A child that is not pinned inherits the parent route. The host's subagent depth limit defaults to 1; raise it if you want a child to delegate again.
 
-Slash entry: `/poteto-mode`, plus the bundled playbook and principle skills. [`/setup-pstack`](./skills/setup-pstack/SKILL.md) points at the Settings page.
+## Uninstall
 
-## 开发 / Develop
+```sh
+dsh plugin --profile desktop remove pstack-dsh
+```
+
+Then delete `$DSH_HOME/pstack-dsh.json` if you no longer want the review pin.
+
+## Develop
 
 ```sh
 pnpm install
+pnpm typecheck
 pnpm test
+pnpm build
 ```
 
-不要对用户正在用的 DSH Host 发 `--force`，也不要杀它。对照 [TEST-PLAN.md](./TEST-PLAN.md)。
+`pnpm check` runs typecheck, tests, and the build. Tests cover the overlay schema, catalog discovery, the spawn tool, skill frontmatter, static call sites, and peer ranges.
 
-Do not `--force` or kill a user's live DSH Host. See [TEST-PLAN.md](./TEST-PLAN.md).
+## Sync notes
 
-## 许可 / License
+The skill tree is pstack 0.15.32. Eleven new skills were added and the shared files were merged against the port's 0.15.0 baseline. Where upstream 0.15.32 adds Cursor-only model or spawn guidance, the DSH rewrite wins; where upstream changes prose or a principle, the upstream text is kept. `make-bot-ui` is excluded.
 
-MIT。玩法与原则：Lauren Tan。DSH 移植打包：aa2246740。见 [LICENSE](./LICENSE)。
+See [HARNESS.md](./HARNESS.md) for the DSH API mapping and [UPGRADE-0.15.md](./UPGRADE-0.15.md) for the original port's provenance.
 
-MIT. Playbooks and principles: Lauren Tan. DSH port packaging: aa2246740. See [LICENSE](./LICENSE).
+## License
+
+MIT. Playbooks and principles: Lauren Tan. DSH port packaging: aa2246740. This fork's server-only migration and 0.15.32 sync: Anrahya.

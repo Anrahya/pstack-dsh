@@ -1,6 +1,6 @@
 id: pstack-dsh
 entry: src/index.ts
-marker: "[my-plugins/pstack-dsh] loaded"
+marker: "[pstack-dsh] loaded"
 kind: function
 profile: web
 hotReload:

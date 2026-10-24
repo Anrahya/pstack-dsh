@@ -1,6 +1,6 @@
 # Steer with principle names
 
-pstack ships 23 principles as individual skills. `/poteto-mode` checks their triggers, loads the matching rules, and names each applied principle in its reply along with the decision it changed. The todo list starts with the matched playbook's steps, not a separate index-reading task.
+pstack ships 24 principles as individual skills. `/poteto-mode` checks their triggers, loads the matching rules, and names each applied principle in its reply along with the decision it changed. The todo list starts with the matched playbook's steps, not a separate index-reading task.
 
 Use principle names to steer. DSH allows the model to load each `principle-*` skill by name. A citation must refer to a rule the agent actually read in this session.
 

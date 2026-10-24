@@ -24,8 +24,8 @@ describe('upstream 0.15 DSH skill availability', () => {
   it('keeps all principle and common workflow skills available to the model', async () => {
     const provider = createSkillProvider(root)
     const names = (await readdir(root)).filter(name => name.startsWith('principle-'))
-    assert.equal(names.length, 23)
-    for (const name of [...names, 'how', 'why', 'unslop', 'typescript-best-practices']) {
+    assert.equal(names.length, 24)
+    for (const name of [...names, 'how', 'why', 'unslop', 'typescript-best-practices', 'benchmark-checklist']) {
       const skill = await provider.get({ name })
       assert.equal(skill?.invocation.modelInvocable, true, name)
     }

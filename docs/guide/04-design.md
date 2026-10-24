@@ -40,7 +40,7 @@ flowchart LR
     H --> I[Verify]
 ```
 
-The panel comes from **Settings → pstack**, and you can adjust it per task. Ask for more candidates when the decision matters, fewer when it doesn't:
+The panel comes from `$DSH_HOME/pstack-dsh.json` when review is pinned, and you can adjust it per task. Ask for more candidates when the decision matters, fewer when it doesn't:
 
 ```text
 /arena this, 5 candidates. the cache key format is expensive to change later.

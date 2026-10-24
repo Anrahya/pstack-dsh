@@ -23,6 +23,7 @@ Remaining triggers:
 - Parallel fan-out → the **swarm** skill for coverage matrices, races, gauntlets, and exploration partitions. Use **arena** for design or code bakeoffs with base selection and grafting.
 - Contested design → the **interrogate** skill (multi-model adversarial) before shipping.
 - Nontrivial multi-step → write the throughput checkpoint (Feature step 3).
+- Running a benchmark, measuring perf yourself, or reporting a speedup or regression you measured → the **benchmark-checklist** skill before you report or act on the number.
 - Any prose surface → the **unslop** skill. Your reply is a prose surface. Write it per **Writing the reply**. Agent-facing prose also follows the **authoring-a-skill** playbook.
 - Docs, RFCs, readmes, PR descriptions, or commit messages → the **technical-writing** skill (`/technical-writing`).
 - Before commit → the **unslop** skill (`/unslop`).
@@ -43,7 +44,7 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 - **Laziness Protocol** (**principle-laziness-protocol**). Refactoring, sizing a diff, or tempted to add abstractions, layers, or signal threading. Bias to deletion and the smallest change that solves the problem.
 - **Foundational Thinking** (**principle-foundational-thinking**). Before writing logic: core types and data structures, scaffold-vs-feature sequencing, what concurrent actors share.
 - **Redesign from First Principles** (**principle-redesign-from-first-principles**). Integrating a new requirement into an existing design. Redesign as if it had been foundational from day one.
-- **Attack the Premise** (**principle-attack-the-premise**). Two or more fixes that share one premise have failed the same gate. Take a census of which actors hold the imbalance before the next fix, then question the premise instead of writing another fix that assumes it.
+- **Attack the Premise** (**principle-attack-the-premise**). Two or more fixes that share one premise have failed the same gate. Write the premise down and test it directly before writing another fix that assumes it.
 - **Subtract Before You Add** (**principle-subtract-before-you-add**). Sequencing an addition, refactor, or rewrite. Remove dead weight first, then build on the simpler base.
 - **Minimize Reader Load** (**principle-minimize-reader-load**). Reviewing or shaping code that's hard to trace. Count layers and hidden state, collapse one-caller wrappers, shrink mutable scope.
 - **Outcome-Oriented Execution** (**principle-outcome-oriented-execution**). Planned rewrites and migrations with explicit phase boundaries. Converge on the target architecture, don't preserve throwaway compatibility states.
@@ -66,7 +67,8 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 - **Fix Root Causes** (**principle-fix-root-causes**). Debugging. Trace each symptom to its root cause, reproduce first, ask why until you reach it.
 - **Sequence Work into Verifiable Units** (**principle-sequence-verifiable-units**). Multi-step work (sweeps, migrations, runs of similar edits) and how you stack commits and PRs. Break work into small units that each end in a check, verify each before the next, and order delivery so the sequence proves itself.
 
-- **Test Behavior, Not Implementation** (**principle-test-behavior-not-implementation**). Writing, changing, or keeping a test. Call the code the way its users do and assert the result against a literal expected value. If the test would still pass when every imported function returns `undefined`, rewrite the assertion or delete the test.
+- **Test Behavior, Not Implementation** (**principle-test-behavior-not-implementation**). Writing, changing, or keeping a test. Assert what the code's users can observe, so the test fails when that behavior breaks and keeps passing when only the internals change.
+- **Explain the Number** (**principle-explain-the-number**). Before you trust, report, or act on a measured number. Find what limits it, and rule out that it measured something other than the work you think.
 
 **Delegation**
 
@@ -95,7 +97,7 @@ Follow [`../setup-pstack/references/spawn.md`](../setup-pstack/references/spawn.
 
 **Defaults for every `pstack_spawn` call.** `run_in_background: true`. File pointers, not inlined dumps. Do not send `model`, `provider`, `reasoning_effort`, `thinking`, `isolation`, `subagent_type`, or `environment`. Out of the box the child inherits this conversation. `/setup-pstack` may map a role onto a logged-in live route; then `pstack_spawn` applies that overlay without the skill sending slugs. Code delegates: `feature` / `refactoring` / `bug-fix` / `perf-issue` / `hillclimb` / `hardest-tasks` as the playbook names. Independent verify: `independent-verifier`. `/no-comments`: `comment-sicko`.
 
-DSH `subagent` has no worktree field. When workers must not share a tree, this parent creates the worktree and puts the path in the prompt. Nested spawn exists (default depth 3) but playbook fan-out still belongs on the parent when isolation or overlay routing matters.
+DSH `subagent` has no worktree field. When workers must not share a tree, this parent creates the worktree and puts the path in the prompt. Nested spawn depth defaults to 1; raise the Host subagent limit if a playbook needs a child to delegate again. Playbook fan-out still belongs on the parent when isolation or overlay routing matters.
 
 If `pstack_spawn` is missing, fall back to official `subagent` with only `description`, `prompt`, `run_in_background`.
 

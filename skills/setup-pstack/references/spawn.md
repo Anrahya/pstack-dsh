@@ -17,7 +17,7 @@ Allowed fields: `description`, `prompt`, `role`, `run_in_background`, `route_ind
 
 Forbidden on this call: `model`, `provider`, `reasoning_effort`, `thinking`, `isolation`, `subagent_type`, `environment`, `readonly`, `resume_from`.
 
-Route and effort come from `$DSH_HOME/pstack-dsh.json` when Settings → pstack mapped that role to a live logged-in route. Missing overlay, `inherit: true`, or empty `routes`: inherit this conversation. Usable without setup.
+Route and effort come from `$DSH_HOME/pstack-dsh.json` when `/setup-pstack` pinned that role to a live route. Missing overlay, `inherit: true`, or empty `routes`: inherit this conversation. Usable without setup.
 
 ## Fallback
 
@@ -25,7 +25,7 @@ If `pstack_spawn` is not registered, call official `subagent` with only `descrip
 
 ## Wait and cancel
 
-- Continuable (shipped `spawn` + `subagent` `backgroundMode: continuable`): start returns a subagent id. A settlement notice arrives when the child ends. `send_message` gives it more work. `interrupt_agent` stops the current turn.
+- Background (`delivery: parent` on `startActivation`): the call returns a subagent id. A settlement notice arrives when the child ends. `send_message` gives it more work. `interrupt_agent` stops the current turn.
 - One-shot background: collect with `job_output`, stop with `job_kill`.
 
 Do not poll `list_agents` for completion.

@@ -1,5 +1,5 @@
-/** Startup line `dshx verify-boot` looks for. */
-export const BOOT_MARKER = '[my-plugins/pstack-dsh] loaded'
+/** Startup line the host can look for. */
+export const BOOT_MARKER = '[pstack-dsh] loaded'
 
 /** Cordis plugin / Loader row id. */
 export const PLUGIN_ID = 'pstack-dsh'
@@ -18,7 +18,7 @@ export const OAUTH_AUTH_LEGACY_FILENAME = '.pi-login-auth.json'
 export const ANTIGRAVITY_AUTH_FILENAME = '.dsh-antigravity-oauth.json'
 export const ANTIGRAVITY_PROVIDER = 'agy-google-antigravity'
 
-/** Official DeepSeek adapter. `packages/llm/llm-deepseek/src/index.ts` `PROVIDER`, `DEFAULT_API_KEY_ENV`. */
+/** Official DeepSeek adapter. */
 export const DEEPSEEK_API_KEY_ENV = 'DEEPSEEK_API_KEY'
 export const DEEPSEEK_PROVIDER = 'deepseek-official'
 
@@ -28,12 +28,5 @@ export const TOOL_SPAWN = 'pstack_spawn'
 export const TOOL_OVERLAY_READ = 'pstack_overlay_read'
 export const TOOL_OVERLAY_WRITE = 'pstack_overlay_write'
 
-/** Default in-process spawn provider. `packages/bundle/base/cordis.patch.yml` `providerName: spawn`. */
+/** Default in-process spawn provider. */
 export const SPAWN_PROVIDER = 'spawn'
-
-/** Settings nav id. Official slot `settings.section` (`packages/client/ui-settings/src/client/contract/slots.ts`). */
-export const SETTINGS_SECTION_ID = 'pstack'
-
-/** Same-origin Web routes. Pattern: dsh-oauth-login `src/auth-routes.ts`. */
-export const SETTINGS_SNAPSHOT_PATH = '/plugins/pstack-dsh/settings'
-export const SETTINGS_SAVE_PATH = '/plugins/pstack-dsh/settings'

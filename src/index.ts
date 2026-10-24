@@ -4,16 +4,12 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-host-webserver'
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-skill'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
-import { PLUGIN_ID, SPAWN_PROVIDER } from './ids.ts'
+import { BOOT_MARKER, PLUGIN_ID, SPAWN_PROVIDER } from './ids.ts'
 import { Config, type Config as PluginConfig } from './plugin-config.ts'
 import { createSkillProvider } from './skills-provider.ts'
-import { RoleEffortMap } from './request-overlay.ts'
 import {
   catalogTool,
   overlayReadTool,
@@ -21,7 +17,6 @@ import {
   spawnTool,
   type ToolHost,
 } from './tools.ts'
-import { registerPstackSettingsRoutes } from './settings-routes.ts'
 
 export const name = PLUGIN_ID
 export const inject = ['tools', 'skills']
@@ -33,14 +28,13 @@ const JSON_OUTPUT = {
   render: (_args: unknown, value: JsonValue) => [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }],
 }
 
-function asHost(ctx: Context, config: PluginConfig | undefined, roles: RoleEffortMap): ToolHost {
+function asHost(ctx: Context, config: PluginConfig | undefined): ToolHost {
   return {
     get llm() { return ctx.get('llm') as ToolHost['llm'] },
     get credentials() { return ctx.get('credentials') as ToolHost['credentials'] },
     get settings() { return ctx.get('settings') as ToolHost['settings'] },
     get subagents() { return ctx.get('subagents') as ToolHost['subagents'] },
     spawnProvider: config?.spawnProvider ?? SPAWN_PROVIDER,
-    roles,
   }
 }
 
@@ -59,27 +53,11 @@ function registerOne(ctx: Context, tool: ReturnType<typeof catalogTool>): void {
 }
 
 export function apply(ctx: Context, config?: PluginConfig): void {
-  console.log('[my-plugins/pstack-dsh] loaded')
-  const roles = new RoleEffortMap()
-  const host = asHost(ctx, config, roles)
+  console.log(BOOT_MARKER)
+  const host = asHost(ctx, config)
   registerOne(ctx, catalogTool(host))
   registerOne(ctx, overlayReadTool(host))
   registerOne(ctx, overlayWriteTool(host))
   registerOne(ctx, spawnTool(host))
   ctx.skills.registerProvider(() => createSkillProvider())
-  ctx.inject(['webServer', 'connection'], webCtx => {
-    registerPstackSettingsRoutes(webCtx, host)
-  })
-
-  ctx.on('agent/request', async (payload, next) => {
-    const base = await next()
-    const binding = roles.lookup(payload.agent.id)
-    if (binding === undefined) return base
-    return {
-      ...base,
-      ...binding.provider ? { provider: binding.provider } : {},
-      ...binding.model ? { model: binding.model } : {},
-      ...binding.reasoningEffort ? { reasoningEffort: ReasoningEffortId(binding.reasoningEffort) } : {},
-    }
-  })
 }

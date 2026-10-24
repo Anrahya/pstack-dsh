@@ -1,70 +1,38 @@
 # Test plan
 
-Cola does not have to be the guinea pig. Run these against a local DSH checkout plus dshx.
+Run everything against a local DSH 0.2.1 install.
 
-## Static
-
-```bash
-npm install
-npm test
-npm run typecheck
-```
-
-`tests/static-call-sites.spec.ts` greps skills and docs for harness leftovers:
-
-- Cursor `AskQuestion`, `TodoWrite`, `~/.cursor/rules`
-- Cursor panel slugs (`claude-fable-5-thinking-max`, `gpt-5.6-sol-max`, `grok-4.6-fast-xhigh`, `claude-opus-5-thinking-xhigh`)
-- `subagent_type`, grok `get_task_output`, grok `scheduler_create`
-- spawn docs sending `reasoning_effort` / `thinking`
-- `cursor-team-kit`, `/deslop` as a required control skill
-
-## dshx check
-
-From a machine with [dshx](https://github.com/aa2246740/dsh-external-plugin-devkit) and a DSH checkout:
+## Static and unit
 
 ```bash
-dshx setup --harness /path/to/deepseek-harness
-# link this repo as my-plugins/pstack-dsh if it is not already
-dshx check pstack-dsh --harness /path/to/deepseek-harness
+pnpm install
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-Must pass: named `export function apply`, no `export default`, boot marker `[my-plugins/pstack-dsh] loaded` in source, portable `cordis.yml`, `dsh.client` + lazy-CJS `lib/client.js` (`window.__ModuleLoader__.load`).
+The suite covers:
 
-## verify-boot (isolated cold boot)
+- overlay parsing, inheritance, panel routes, and route validation against a live catalog
+- catalog discovery: only configured credentials or signed-in OAuth routes, never a vendor catalog
+- `pstack_spawn`: disabled retired role, background `delivery: parent`, foreground `delivery: caller`, persona in the prompt, no model or effort fields on the schema
+- skill frontmatter, kebab-case names, model-invocable principles, and the 24-principle count
+- static call sites: no Cursor `Task` fields, model slugs, `.cursor` rules, `cursor-team-kit`, or `/deslop`
+- peer range `>=0.2.1-rc.1 <0.3.0`
+- package composition: no client export, no `dsh.client`, no settings route
 
-```bash
-dshx status          # if a live Host is already supervised, skip this section
-dshx verify-boot pstack-dsh --port 43123
-```
+## Bundle
 
-Never `--force`. Never stop a Host this command did not start.
+- `pnpm build` writes only `lib/index.js` and `lib/index.d.ts`.
+- `cordis.patch.yml` inserts `id: pstack-dsh`, `name: pstack-dsh`.
+- The package has no `prepare` script and ships `lib/`.
 
-This cloud checkout ran `dshx check` green. `dshx verify-boot pstack-dsh --port 43123` then skipped isolated cold boot: the linked official DSH tree had no installed CLI (`dump-config exited 1`, `id pstack-dsh missing from dump-config`). No Host was started or stopped. Re-run verify-boot on a machine where `dsh` dumps config.
+## Manual smoke test
 
-## Catalog / overlay (no network models required)
-
-`tests/catalog.spec.ts` and `tests/overlay.spec.ts` cover:
-
-- empty host → `selectableCount === 0`, `inheritParent: true`, oauth recommend line
-- API-key route only when `credentials.describe` says configured
-- unsigned vendor ids are not listed
-- overlay write rejects a route that is not selectable
-- overlay write rejects `reasoningEffort` when that route has no efforts
-- overlay write rejects an effort id the live adapter did not list
-- missing overlay file → every role inherits
-- Settings snapshot/save uses the same overlay path and rejects unsigned slugs (`tests/settings-api.spec.ts`, `tests/settings-draft.spec.ts`)
-
-## Manual Settings (EDITH / local DSH Web)
-
-After the bundle has been activated on the intended Host (initial bundle installation requires an authorized Host restart):
-
-1. Open Settings (sidebar gear) → **pstack** / **pstack 角色**.
-2. With no keys and no oauth store: inherit-only, oauth recommend line, Save still writes inherit overlay.
-3. Add `DEEPSEEK_API_KEY` or sign in through dsh-oauth-login. The role selector updates from Host notifications, without a page reload. Effort options match `resolveModelInfo` or are omitted.
-4. Save. `$DSH_HOME/pstack-dsh.json` matches the form. `pstack_spawn` does not grow `model` / `reasoning_effort` fields.
-5. `/setup-pstack` only points at Settings → pstack. It does not run a TUI picker.
-6. Leave role/effort edits unsaved, then refresh models or receive a login/logout notification. Choices update; drafts and Save's dirty state remain. A selected route that disappears is marked unavailable rather than silently displaying inherit.
-
-`node tests/settings-refresh.browser.mjs [candidate/lib/client.js]` checks these UI behaviors on the existing `127.0.0.1:43127` Host using the globally pinned Playwright runtime. Snapshot responses and Host notifications are simulated only in that test page; no login, saved overlay or server process is changed. Supplying a candidate bundle tests it before live publication.
-
-Client builds use dshx `externalClientBundle`; configure matching `DSHX_HARNESS` / `~/.config/dshx/harness` paths before `npm run check`.
+1. Install `github:Anrahya/pstack-dsh#v0.3.0` into a throwaway profile, or link the checkout.
+2. Restart the Host. Look for `[pstack-dsh] loaded`.
+3. Run `/poteto-mode` on a small task. Confirm the skill loads and `pstack_spawn` appears in the tool list.
+4. Call `pstack_catalog`. Confirm `opencode-go/glm-5.3-flash` is listed with `low`, `high`, and `max`.
+5. Write the review overlay with `pstack_overlay_write`, then start an `independent-verifier` child. Confirm it runs on GLM and the main session stays on its own route.
+6. Remove the overlay. Confirm a new child inherits the main session route again.
+7. Confirm there is no Settings → pstack page and no `lib/client.js`.
