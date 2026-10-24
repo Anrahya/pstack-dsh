@@ -54,7 +54,7 @@ Example for the recommended pin:
 ## Rules
 
 - Never send `model`, `provider`, or effort on `pstack_spawn`. The overlay supplies them.
-- Do not write `~/.cursor/rules` or `~/.grok/roles`. Do not invent Cursor panel slugs.
+- Do not write Cursor or Grok config trees. Do not invent Cursor panel slugs.
 - Do not pin a role just because it exists. Inherit is the default and the cheapest correct choice.
 - Effort must be listed by that route. `glm-5.3-flash` accepts `low`, `high`, and `max`; it has no `medium` or `xhigh`.
 - A panel with one route runs one reviewer. Add routes only when the user asks for more reviewers.

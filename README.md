@@ -11,13 +11,13 @@ DeepSeek Harness port of [official pstack](https://github.com/cursor/plugins/tre
 Desktop app: **Settings → Plugins → Add plugin**, then enter:
 
 ```text
-github:Anrahya/pstack-dsh#v0.3.0
+github:Anrahya/pstack-dsh#v0.3.1
 ```
 
 Web profile:
 
 ```sh
-dsh plugin --profile web add github:Anrahya/pstack-dsh#v0.3.0
+dsh plugin --profile web add github:Anrahya/pstack-dsh#v0.3.1
 ```
 
 Restart the app or the Web Host once after installing. The package ships `lib/`, so no build step is needed.

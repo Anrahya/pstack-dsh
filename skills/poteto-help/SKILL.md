@@ -111,7 +111,7 @@ Close calls:
 Not in pstack:
 
 - `deslop`, `control-cli`, and `control-ui` are Cursor-only plugins and are not shipped. Use `/unslop` and `/no-comments`, then drive the real surface.
-- `/loop`, `/create-skill`, Custom Modes, Bugbot, and Automations are Cursor-only and are not shipped. Use `create_goal` with automatic continuation, write `SKILL.md` directly, and use GitHub review threads.
+- Cursor's loop command, `create-skill`, Custom Modes, review bots, and Automations are Cursor-only and are not shipped. Use `create_goal` with automatic continuation, write `SKILL.md` directly, and use GitHub review threads.
 - pstack has no `/orchestrate` skill. Orchestrate is a `/poteto-mode` playbook. If the skill list shows `/orchestrate`, another plugin provides it.
 
 ## Playbooks and principles

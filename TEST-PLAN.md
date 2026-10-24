@@ -29,7 +29,7 @@ The suite covers:
 
 ## Manual smoke test
 
-1. Install `github:Anrahya/pstack-dsh#v0.3.0` into a throwaway profile, or link the checkout.
+1. Install `github:Anrahya/pstack-dsh#v0.3.1` into a throwaway profile, or link the checkout.
 2. Restart the Host. Look for `[pstack-dsh] loaded`.
 3. Run `/poteto-mode` on a small task. Confirm the skill loads and `pstack_spawn` appears in the tool list.
 4. Call `pstack_catalog`. Confirm `opencode-go/glm-5.3-flash` is listed with `low`, `high`, and `max`.

@@ -16,7 +16,7 @@ Invoke when the user says "reflect" or "/reflect". Skip when the conversation is
 
 ### 1. Locate the active transcript
 
-The parent finds this conversation's DSH session log before fanning out. JSONL backends expose a path through `SessionPersistence.locate`; SQLite backends share one database and have no per-session file (`docs/subsystems/persistence.md`). Use the current session and, if present, session-query tools. Do not glob `~/.cursor/projects/*/`. Do not glob other users' `$DSH_HOME`.
+The parent finds this conversation's DSH session log before fanning out. JSONL backends expose a path through `SessionPersistence.locate`; SQLite backends share one database and have no per-session file (`docs/subsystems/persistence.md`). Use the current session and, if present, session-query tools. Do not glob other workspaces or other users' `$DSH_HOME`.
 
 If no on-disk transcript path resolves, write a tight digest of this session and pass that instead.
 

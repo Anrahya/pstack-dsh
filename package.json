@@ -1,7 +1,7 @@
 {
   "name": "pstack-dsh",
   "description": "DeepSeek Harness port of official pstack. Playbooks and principles are poteto's; only the harness call layer is rewritten.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",

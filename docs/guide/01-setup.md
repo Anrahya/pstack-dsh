@@ -4,12 +4,12 @@ Install the plugin, decide whether review should use a different route, and run 
 
 ## Install the plugin
 
-Desktop app: **Settings → Plugins → Add plugin**, then `github:Anrahya/pstack-dsh#v0.3.0`.
+Desktop app: **Settings → Plugins → Add plugin**, then `github:Anrahya/pstack-dsh#v0.3.1`.
 
 Web profile:
 
 ```sh
-dsh plugin --profile web add github:Anrahya/pstack-dsh#v0.3.0
+dsh plugin --profile web add github:Anrahya/pstack-dsh#v0.3.1
 ```
 
 Restart that Host and reload the page. Adding writes to the profile; it does not hot-load a running process.

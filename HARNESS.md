@@ -17,7 +17,7 @@ Install as a DSH plugin with `dsh plugin add`, or from Settings → Plugins. Do 
 | pstack need | DSH API | Source |
 |---|---|---|
 | Slash skill / poteto-mode | `ctx.skills` provider + `dsh-tool-skill` `skill` tool. User `/name` injection. Frontmatter: kebab-case `name`, `description`, optional `whenToUse`, `disable-model-invocation`, `user-invocable`. | `packages/skill/tool-skill/README.md`; `docs/subsystems/skills.md`; `packages/skill/skill-filesystem/README.md` |
-| Plugin install | npm bundle `dsh.bundle.patch` → `dsh plugin --profile web add github:Anrahya/pstack-dsh#v0.3.0` | `docs/user/develop/basic/publish.md` |
+| Plugin install | npm bundle `dsh.bundle.patch` → `dsh plugin --profile web add github:Anrahya/pstack-dsh#v0.3.1` | `docs/user/develop/basic/publish.md` |
 | Role config | `$DSH_HOME/pstack-dsh.json`, read and validated by this plugin. No client bundle, no web routes, no settings slot. | this repository |
 | Spawn child | Model-facing official `subagent` takes only `description`, `prompt`, `run_in_background`. This plugin's `pstack_spawn` adds `role` and `route_index`. Internally `ctx.subagents.startActivation`. | `packages/subagent/tool-subagent/README.md`; `packages/subagent/subagent/README.md` |
 | Per-child model | `AgentOptions` `{ provider?, model?, reasoningEffort?, maxTokens? }` on the activation request. Not a model-facing field on `subagent` unless the Host enables model selection. Omit it to inherit the parent. | `packages/core/agent/src/runtime-types.ts`; `packages/subagent/subagent/src/types.ts` |
